@@ -7,7 +7,7 @@ local fps = 0
 local lastTick = tick()
 local frameCount = 0
 
--- Đo FPS
+-- FPS tracker
 RunService.RenderStepped:Connect(function()
 	frameCount += 1
 	if tick() - lastTick >= 1 then
@@ -18,20 +18,24 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local startTime = tick()
-local safePosition = Vector3.new(1000, 150, 1000)
+local safePosition = Vector3.new(1000, 350, 1000)
 local autoFly = false
 local radius = 200
 local speed = 2
-local height = 350  -- ✅ TĂNG ĐỘ CAO bay lên 350 studs
+local height = 350
 local angle = 0
 
 local lastY = nil
 local stuckTimer = 0
 local groundCheckTime = 0
 local groundThreshold = 10
-local stuckThreshold = 5 -- giây đứng yên dưới đất thì cảnh báo
+local stuckThreshold = 5 -- seconds
+local dropThresholdSpeed = -50 -- studs/s
+local dropMinHeight = 150 -- dưới mức này mới tính là rơi đột ngột
 
--- Notification nhỏ gọn
+local rounds = 0 -- bộ đếm số trận đã hoàn thành
+local isFirstSpawn = true
+
 local function showNotification(txt, color)
 	local playerGui = player:WaitForChild("PlayerGui")
 	local guiName = "CustomNotification"
@@ -49,7 +53,7 @@ local function showNotification(txt, color)
 	local frame = Instance.new("Frame")
 	frame.AnchorPoint = Vector2.new(1, 0)
 	frame.Position = UDim2.new(1.2, 0, 0, 20)
-	frame.Size = UDim2.new(0, 250, 0, 60)
+	frame.Size = UDim2.new(0, 250, 0, 50)
 	frame.BackgroundColor3 = color or Color3.fromRGB(50, 50, 50)
 	frame.BackgroundTransparency = 0.2
 	frame.BorderSizePixel = 0
@@ -64,7 +68,7 @@ local function showNotification(txt, color)
 	label.Position = UDim2.new(0, 10, 0, 10)
 	label.BackgroundTransparency = 1
 	label.TextColor3 = Color3.new(1, 1, 1)
-	label.TextSize = 16
+	label.TextSize = 14
 	label.Font = Enum.Font.SourceSansBold
 	label.TextWrapped = true
 	label.Text = txt
@@ -87,7 +91,6 @@ local function showNotification(txt, color)
 	end)
 end
 
--- NOTICE
 local function showStartNotice(callback)
 	local playerGui = player:WaitForChild("PlayerGui")
 
@@ -105,7 +108,7 @@ local function showStartNotice(callback)
 	local noticeFrame = Instance.new("Frame")
 	noticeFrame.AnchorPoint = Vector2.new(1, 0)
 	noticeFrame.Position = UDim2.new(1.2, 0, 0, 20)
-	noticeFrame.Size = UDim2.new(0.4, 0, 0.2, 0)
+	noticeFrame.Size = UDim2.new(0.4, 0, 0.15, 0)
 	noticeFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	noticeFrame.BackgroundTransparency = 0.3
 	noticeFrame.BorderSizePixel = 0
@@ -123,7 +126,7 @@ local function showStartNotice(callback)
 	noticeLabel.TextScaled = true
 	noticeLabel.Font = Enum.Font.GothamBold
 	noticeLabel.TextWrapped = true
-	noticeLabel.Text = "‼️ VUI LÒNG BẤM NÚT JOIN GAME\nCHE MÀN HÌNH SẼ ĐƯỢC KÍCH HOẠT SAU 10 GIÂY."
+	noticeLabel.Text = "‼️ Nên sử dụng Badge và Briefcase để có thể cày tốt hơn và Vui Lòng Bấm Nút Join Game \nChe Màn Hình Sẽ Được Kích hoạt Sau 10 Giây."
 	noticeLabel.Parent = noticeFrame
 
 	TweenService:Create(
@@ -147,7 +150,6 @@ end
 local function teleportToSafePosition()
 	local char = player.Character or player.CharacterAdded:Wait()
 	local hrp = char:WaitForChild("HumanoidRootPart", 5)
-
 	if hrp then
 		hrp.CFrame = CFrame.new(safePosition)
 		showNotification("✅ Đã dịch chuyển đến vị trí an toàn.", Color3.fromRGB(0, 200, 0))
@@ -181,7 +183,7 @@ local function createCoverGui()
 	local centerFrame = Instance.new("Frame")
 	centerFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	centerFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	centerFrame.Size = UDim2.new(0.4, 0, 0.3, 0)
+	centerFrame.Size = UDim2.new(0.45, 0, 0.3, 0) -- ✅ TĂNG size để chứa nội dung
 	centerFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	centerFrame.BackgroundTransparency = 0.3
 	centerFrame.BorderSizePixel = 0
@@ -192,12 +194,12 @@ local function createCoverGui()
 	corner.Parent = centerFrame
 
 	local centerLabel = Instance.new("TextLabel")
-	centerLabel.Size = UDim2.new(1, -40, 1, -40)
-	centerLabel.Position = UDim2.new(0, 20, 0, 20)
+	centerLabel.Size = UDim2.new(1, -20, 1, -20)
+	centerLabel.Position = UDim2.new(0, 10, 0, 10)
 	centerLabel.BackgroundTransparency = 1
 	centerLabel.TextColor3 = Color3.new(1, 1, 1)
 	centerLabel.Font = Enum.Font.GothamBold
-	centerLabel.TextSize = 20
+	centerLabel.TextSize = 16
 	centerLabel.TextWrapped = true
 	centerLabel.TextYAlignment = Enum.TextYAlignment.Top
 	centerLabel.RichText = true
@@ -214,7 +216,8 @@ local function createCoverGui()
 			centerLabel.Text =
 				"🍎 <b>Apple Hub</b> 🍎\n\n" ..
 				"🎯 FPS: <b>".. tostring(fps) .."</b>\n" ..
-				"⏳ Thời gian chạy: <b>".. string.format("%02d:%02d:%02d", hours, minutes, seconds) .. "</b>"
+				"⏳ Thời gian chạy: <b>".. string.format("%02d:%02d:%02d", hours, minutes, seconds) .. "</b>\n" ..
+				"🎮 Số trận hoàn thành: <b>" .. tostring(rounds) .. "</b>"
 
 			task.wait(1)
 		end
@@ -231,8 +234,8 @@ RunService.RenderStepped:Connect(function(dt)
 				math.cos(angle) * radius,
 				height,
 				math.sin(angle) * radius
-			)
-			char.HumanoidRootPart.CFrame = CFrame.new(pos)
+		 )
+			char.HumanoidRootPart.CFrame = CFrame.new(pos, Vector3.new(0, height, 0))
 		end
 	end
 end)
@@ -251,7 +254,7 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Kiểm tra stuck
+-- Kiểm tra stuck & rơi đột ngột
 RunService.Heartbeat:Connect(function()
 	if autoFly then
 		local char = player.Character
@@ -259,7 +262,7 @@ RunService.Heartbeat:Connect(function()
 			local y = char.HumanoidRootPart.Position.Y
 
 			if lastY then
-				if math.abs(y - lastY) < 1 then
+				if math.abs(y - lastY) < 0.2 then
 					stuckTimer += 1/60
 					if stuckTimer > stuckThreshold then
 						showNotification("⚠️ Hệ thống bay không hoạt động.", Color3.fromRGB(255, 100, 0))
@@ -272,14 +275,16 @@ RunService.Heartbeat:Connect(function()
 				if y < groundThreshold then
 					groundCheckTime += 1/60
 					if groundCheckTime > 3 then
-						showNotification("⚠️ Hệ thống bay không hoạt động (dưới đất quá lâu).", Color3.fromRGB(255, 100, 0))
+						showNotification("⚠️ Hệ thống bay không hoạt động (ở mặt đất quá lâu).", Color3.fromRGB(255, 100, 0))
 						groundCheckTime = 0
 					end
 				else
 					groundCheckTime = 0
 				end
 
-				if y < lastY - 50 then
+				local verticalSpeed = (y - lastY) / (1/60)
+
+				if verticalSpeed < dropThresholdSpeed and y < dropMinHeight then
 					showNotification("⚠️ Nhân vật của bạn đã bị hạ gục (rơi đột ngột).", Color3.fromRGB(255, 0, 0))
 				end
 			end
@@ -289,11 +294,27 @@ RunService.Heartbeat:Connect(function()
 	end
 end)
 
+player.CharacterAdded:Connect(function()
+	if isFirstSpawn then
+		isFirstSpawn = false
+	else
+		rounds += 1
+		showNotification("🎉 Đã hoàn thành 1 trận!", Color3.fromRGB(0, 200, 255))
+		task.wait(1)
+		teleportToSafePosition()
+		createCoverGui()
+		task.delay(1, function()
+			autoFly = true
+			showNotification("✅ Hệ thống bay đã hoạt động.", Color3.fromRGB(0, 200, 0))
+		end)
+	end
+end)
+
 showStartNotice(function()
 	teleportToSafePosition()
 	createCoverGui()
 	task.delay(1, function()
 		autoFly = true
-		showNotification("✅ Hệ thống bay đã sẵn sàng hoạt động.", Color3.fromRGB(0, 200, 0))
+		showNotification("✅ Hệ thống bay đã hoạt động.", Color3.fromRGB(0, 200, 0))
 	end)
 end)
