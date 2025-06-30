@@ -19,22 +19,17 @@ end)
 
 local startTime = tick()
 local safePosition = Vector3.new(1000, 350, 1000)
+local center = safePosition
+
 local autoFly = false
 local radius = 200
 local speed = 2
-local height = 350
 local angle = 0
 
-local lastY = nil
-local stuckTimer = 0
-local groundCheckTime = 0
-local groundThreshold = 10
-local stuckThreshold = 5 -- seconds
-local dropThresholdSpeed = -50 -- studs/s
-local dropMinHeight = 150 -- dưới mức này mới tính là rơi đột ngột
-
-local rounds = 0 -- bộ đếm số trận đã hoàn thành
+local rounds = 0
 local isFirstSpawn = true
+
+local bodyVelocity = nil
 
 local function showNotification(txt, color)
 	local playerGui = player:WaitForChild("PlayerGui")
@@ -126,7 +121,7 @@ local function showStartNotice(callback)
 	noticeLabel.TextScaled = true
 	noticeLabel.Font = Enum.Font.GothamBold
 	noticeLabel.TextWrapped = true
-	noticeLabel.Text = "‼️ Nên sử dụng Badge và Briefcase để có thể cày tốt hơn và Vui Lòng Bấm Nút Join Game \nChe Màn Hình Sẽ Được Kích hoạt Sau 10 Giây."
+	noticeLabel.Text = "‼️ Sử Dụng Badge Và Briefcase để cày được tối ưu hơn , Vui Lòng Bấm Nút Join Game\nChe Màn Hình Sẽ Kích Hoạt Sau 10 Giây."
 	noticeLabel.Parent = noticeFrame
 
 	TweenService:Create(
@@ -183,7 +178,7 @@ local function createCoverGui()
 	local centerFrame = Instance.new("Frame")
 	centerFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 	centerFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-	centerFrame.Size = UDim2.new(0.45, 0, 0.3, 0) -- ✅ TĂNG size để chứa nội dung
+	centerFrame.Size = UDim2.new(0.45, 0, 0.3, 0)
 	centerFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 	centerFrame.BackgroundTransparency = 0.3
 	centerFrame.BorderSizePixel = 0
@@ -224,18 +219,35 @@ local function createCoverGui()
 	end)
 end
 
--- BAY
+-- Bay mượt bằng BodyVelocity
 RunService.RenderStepped:Connect(function(dt)
 	if autoFly then
 		local char = player.Character
 		if char and char:FindFirstChild("HumanoidRootPart") then
+			local hrp = char.HumanoidRootPart
+			hrp.Anchored = false
+
+			if not bodyVelocity or not bodyVelocity.Parent then
+				bodyVelocity = Instance.new("BodyVelocity")
+				bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+				bodyVelocity.P = 5000
+				bodyVelocity.Parent = hrp
+			end
+
 			angle += dt * speed
-			local pos = Vector3.new(
+			local offset = Vector3.new(
 				math.cos(angle) * radius,
-				height,
+				0,
 				math.sin(angle) * radius
-		 )
-			char.HumanoidRootPart.CFrame = CFrame.new(pos, Vector3.new(0, height, 0))
+			)
+			local targetPos = Vector3.new(safePosition.X, safePosition.Y, safePosition.Z) + offset
+			local direction = (targetPos - hrp.Position)
+			bodyVelocity.Velocity = direction * 3
+		end
+	else
+		if bodyVelocity then
+			bodyVelocity:Destroy()
+			bodyVelocity = nil
 		end
 	end
 end)
@@ -254,52 +266,12 @@ RunService.Stepped:Connect(function()
 	end
 end)
 
--- Kiểm tra stuck & rơi đột ngột
-RunService.Heartbeat:Connect(function()
-	if autoFly then
-		local char = player.Character
-		if char and char:FindFirstChild("HumanoidRootPart") then
-			local y = char.HumanoidRootPart.Position.Y
-
-			if lastY then
-				if math.abs(y - lastY) < 0.2 then
-					stuckTimer += 1/60
-					if stuckTimer > stuckThreshold then
-						showNotification("⚠️ Hệ thống bay không hoạt động.", Color3.fromRGB(255, 100, 0))
-						stuckTimer = 0
-					end
-				else
-					stuckTimer = 0
-				end
-
-				if y < groundThreshold then
-					groundCheckTime += 1/60
-					if groundCheckTime > 3 then
-						showNotification("⚠️ Hệ thống bay không hoạt động (ở mặt đất quá lâu).", Color3.fromRGB(255, 100, 0))
-						groundCheckTime = 0
-					end
-				else
-					groundCheckTime = 0
-				end
-
-				local verticalSpeed = (y - lastY) / (1/60)
-
-				if verticalSpeed < dropThresholdSpeed and y < dropMinHeight then
-					showNotification("⚠️ Nhân vật của bạn đã bị hạ gục (rơi đột ngột).", Color3.fromRGB(255, 0, 0))
-				end
-			end
-
-			lastY = y
-		end
-	end
-end)
-
 player.CharacterAdded:Connect(function()
 	if isFirstSpawn then
 		isFirstSpawn = false
 	else
 		rounds += 1
-		showNotification("🎉 Đã hoàn thành 1 trận!", Color3.fromRGB(0, 200, 255))
+		showNotification("🎉 Đã hoàn thành 1 trận mới!", Color3.fromRGB(0, 200, 255))
 		task.wait(1)
 		teleportToSafePosition()
 		createCoverGui()
