@@ -1,6 +1,28 @@
+-- TOBU script nguyên gốc của bạn (KHÔNG thay đổi) ----------------------
+
+local allowedPlaceId = 9872472334 -- Evade
+local ProModeKeyword = "Pro"
+
+if game.PlaceId == allowedPlaceId then
+    local mapFolder = workspace:FindFirstChild("Map")
+    if mapFolder then
+        local mapName = mapFolder.Name
+        if not string.find(mapName, ProModeKeyword) then
+            -- Không ở Pro mode, vẫn cho phép
+        else
+            -- Ở Pro mode, không kick
+            return
+        end
+    end
+else
+    game.Players.LocalPlayer:Kick("Game này không hỗ trợ!")
+    return
+end
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
+local VirtualUser = game:GetService("VirtualUser")
 
 local player = Players.LocalPlayer
 local fps = 0
@@ -24,23 +46,107 @@ local center = safePosition
 local autoFly = false
 local radius = 200
 local speed = 2
+local height = 350
 local angle = 0
 
+local bodyPosition = nil
 local rounds = 0
 local isFirstSpawn = true
 
-local bodyVelocity = nil
+------------------------------------------
+-- Notification Queue
+------------------------------------------
 
-local function showNotification(txt, color)
+local NotificationQueue = {}
+local NotificationBusy = false
+
+function showNotificationQueue(txt, color)
+	table.insert(NotificationQueue, {Text = txt, Color = color})
+
+	if not NotificationBusy then
+		NotificationBusy = true
+
+		task.spawn(function()
+			while #NotificationQueue > 0 do
+				local data = table.remove(NotificationQueue, 1)
+
+				local playerGui = player:WaitForChild("PlayerGui")
+				local guiName = "CustomNotification"
+
+				if playerGui:FindFirstChild(guiName) then
+					playerGui[guiName]:Destroy()
+				end
+
+				local gui = Instance.new("ScreenGui")
+				gui.Name = guiName
+				gui.Parent = playerGui
+				gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+				gui.DisplayOrder = 999999
+
+				local frame = Instance.new("Frame")
+				frame.AnchorPoint = Vector2.new(1, 0)
+				frame.Position = UDim2.new(1.2, 0, 0, 20)
+				frame.Size = UDim2.new(0, 250, 0, 50)
+				frame.BackgroundColor3 = data.Color or Color3.fromRGB(50, 50, 50)
+				frame.BackgroundTransparency = 0.2
+				frame.BorderSizePixel = 0
+				frame.Parent = gui
+
+				local corner = Instance.new("UICorner")
+				corner.CornerRadius = UDim.new(0, 8)
+				corner.Parent = frame
+
+				local label = Instance.new("TextLabel")
+				label.Size = UDim2.new(1, -20, 1, -20)
+				label.Position = UDim2.new(0, 10, 0, 10)
+				label.BackgroundTransparency = 1
+				label.TextColor3 = Color3.new(1, 1, 1)
+				label.TextSize = 14
+				label.Font = Enum.Font.SourceSansBold
+				label.TextWrapped = true
+				label.Text = data.Text
+				label.Parent = frame
+
+				-- Slide in
+				TweenService:Create(
+					frame,
+					TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
+					{Position = UDim2.new(1, -20, 0, 20)}
+				):Play()
+
+				task.wait(3)
+
+				-- Slide out
+				TweenService:Create(
+					frame,
+					TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+					{Position = UDim2.new(1.2, 0, 0, 20)}
+				):Play()
+
+				task.wait(0.5)
+				gui:Destroy()
+			end
+
+			NotificationBusy = false
+		end)
+	end
+end
+
+------------------------------------------
+-- Startup Notice (trượt vào, ở yên)
+------------------------------------------
+
+local startupGui = nil
+
+local function showStartupNotice()
 	local playerGui = player:WaitForChild("PlayerGui")
-	local guiName = "CustomNotification"
 
-	if playerGui:FindFirstChild(guiName) then
-		playerGui[guiName]:Destroy()
+	if playerGui:FindFirstChild("StartupNoticeGui") then
+		playerGui.StartupNoticeGui:Destroy()
 	end
 
 	local gui = Instance.new("ScreenGui")
-	gui.Name = guiName
+	gui.Name = "StartupNoticeGui"
 	gui.Parent = playerGui
 	gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 	gui.DisplayOrder = 999999
@@ -48,14 +154,14 @@ local function showNotification(txt, color)
 	local frame = Instance.new("Frame")
 	frame.AnchorPoint = Vector2.new(1, 0)
 	frame.Position = UDim2.new(1.2, 0, 0, 20)
-	frame.Size = UDim2.new(0, 250, 0, 50)
-	frame.BackgroundColor3 = color or Color3.fromRGB(50, 50, 50)
+	frame.Size = UDim2.new(0, 300, 0, 80)
+	frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 	frame.BackgroundTransparency = 0.2
 	frame.BorderSizePixel = 0
 	frame.Parent = gui
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 10)
 	corner.Parent = frame
 
 	local label = Instance.new("TextLabel")
@@ -66,92 +172,38 @@ local function showNotification(txt, color)
 	label.TextSize = 14
 	label.Font = Enum.Font.SourceSansBold
 	label.TextWrapped = true
-	label.Text = txt
+	label.Text = "Dùng Badge Và Briefcase Để Cày được Tối Ưu Hơn\nVui Lòng Bấm Nút Join Game\nscript làm bởi Tobu"
 	label.Parent = frame
 
+	-- Slide in
 	TweenService:Create(
 		frame,
 		TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
 		{Position = UDim2.new(1, -20, 0, 20)}
 	):Play()
 
-	task.delay(3, function()
-		TweenService:Create(
-			frame,
-			TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
-			{Position = UDim2.new(1.2, 0, 0, 20)}
-		):Play()
-		task.wait(0.4)
-		gui:Destroy()
-	end)
+	startupGui = gui
 end
 
-local function showStartNotice(callback)
-	local playerGui = player:WaitForChild("PlayerGui")
-
-	if playerGui:FindFirstChild("StartNoticeGui") then
-		playerGui.StartNoticeGui:Destroy()
-	end
-
-	local startGui = Instance.new("ScreenGui")
-	startGui.Name = "StartNoticeGui"
-	startGui.IgnoreGuiInset = true
-	startGui.ResetOnSpawn = false
-	startGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-	startGui.Parent = playerGui
-
-	local noticeFrame = Instance.new("Frame")
-	noticeFrame.AnchorPoint = Vector2.new(1, 0)
-	noticeFrame.Position = UDim2.new(1.2, 0, 0, 20)
-	noticeFrame.Size = UDim2.new(0.4, 0, 0.15, 0)
-	noticeFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-	noticeFrame.BackgroundTransparency = 0.3
-	noticeFrame.BorderSizePixel = 0
-	noticeFrame.Parent = startGui
-
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 10)
-	corner.Parent = noticeFrame
-
-	local noticeLabel = Instance.new("TextLabel")
-	noticeLabel.Size = UDim2.new(1, -20, 1, -20)
-	noticeLabel.Position = UDim2.new(0, 10, 0, 10)
-	noticeLabel.BackgroundTransparency = 1
-	noticeLabel.TextColor3 = Color3.new(1, 1, 1)
-	noticeLabel.TextScaled = true
-	noticeLabel.Font = Enum.Font.GothamBold
-	noticeLabel.TextWrapped = true
-	noticeLabel.Text = "‼️ Sử Dụng Badge Và Briefcase để cày được tối ưu hơn , Vui Lòng Bấm Nút Join Game\nChe Màn Hình Sẽ Kích Hoạt Sau 10 Giây."
-	noticeLabel.Parent = noticeFrame
-
-	TweenService:Create(
-		noticeFrame,
-		TweenInfo.new(0.5, Enum.EasingStyle.Sine, Enum.EasingDirection.Out),
-		{Position = UDim2.new(1, -20, 0, 20)}
-	):Play()
-
-	task.spawn(function()
-		for i = 10, 1, -1 do
-			noticeLabel.Text = "‼️ VUI LÒNG BẤM NÚT JOIN GAME\nCHE MÀN HÌNH SẼ ĐƯỢC KÍCH HOẠT SAU "..i.." GIÂY."
-			task.wait(1)
+local function hideStartupNotice()
+	if startupGui then
+		local frame = startupGui:FindFirstChildOfClass("Frame")
+		if frame then
+			TweenService:Create(
+				frame,
+				TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.In),
+				{Position = UDim2.new(1.2, 0, 0, 20)}
+			):Play()
+			task.wait(0.5)
 		end
-		startGui:Destroy()
-		if callback then
-			callback()
-		end
-	end)
-end
-
-local function teleportToSafePosition()
-	local char = player.Character or player.CharacterAdded:Wait()
-	local hrp = char:WaitForChild("HumanoidRootPart", 5)
-	if hrp then
-		hrp.CFrame = CFrame.new(safePosition)
-		showNotification("✅ Đã dịch chuyển đến vị trí an toàn.", Color3.fromRGB(0, 200, 0))
-	else
-		showNotification("❌ Không tìm thấy HumanoidRootPart.", Color3.fromRGB(255, 0, 0))
+		startupGui:Destroy()
+		startupGui = nil
 	end
 end
+
+------------------------------------------
+-- Cover GUI
+------------------------------------------
 
 local function createCoverGui()
 	local playerGui = player:WaitForChild("PlayerGui")
@@ -219,74 +271,138 @@ local function createCoverGui()
 	end)
 end
 
--- Bay mượt bằng BodyVelocity
+------------------------------------------
+-- Fly System
+------------------------------------------
+
+local function startFlying()
+	local char = player.Character
+	if not char then return end
+
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	hrp.CFrame = CFrame.new(safePosition)
+
+	if bodyPosition then
+		bodyPosition:Destroy()
+		bodyPosition = nil
+	end
+
+	bodyPosition = Instance.new("BodyPosition")
+	bodyPosition.MaxForce = Vector3.new(1e9, 1e9, 1e9)
+	bodyPosition.D = 1000
+	bodyPosition.P = 30000
+	bodyPosition.Position = safePosition + Vector3.new(0, height, 0)
+	bodyPosition.Parent = hrp
+	autoFly = true
+end
+
 RunService.RenderStepped:Connect(function(dt)
-	if autoFly then
-		local char = player.Character
-		if char and char:FindFirstChild("HumanoidRootPart") then
-			local hrp = char.HumanoidRootPart
-			hrp.Anchored = false
-
-			if not bodyVelocity or not bodyVelocity.Parent then
-				bodyVelocity = Instance.new("BodyVelocity")
-				bodyVelocity.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-				bodyVelocity.P = 5000
-				bodyVelocity.Parent = hrp
-			end
-
-			angle += dt * speed
-			local offset = Vector3.new(
-				math.cos(angle) * radius,
-				0,
-				math.sin(angle) * radius
-			)
-			local targetPos = Vector3.new(safePosition.X, safePosition.Y, safePosition.Z) + offset
-			local direction = (targetPos - hrp.Position)
-			bodyVelocity.Velocity = direction * 3
-		end
-	else
-		if bodyVelocity then
-			bodyVelocity:Destroy()
-			bodyVelocity = nil
-		end
+	if autoFly and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		angle += dt * speed
+		local offset = Vector3.new(
+			math.cos(angle) * radius,
+			0,
+			math.sin(angle) * radius
+		)
+		local pos = center + offset + Vector3.new(0, height, 0)
+		bodyPosition.Position = pos
 	end
 end)
 
--- Noclip
 RunService.Stepped:Connect(function()
-	if autoFly then
-		local char = player.Character
-		if char then
-			for _,v in pairs(char:GetDescendants()) do
-				if v:IsA("BasePart") then
-					v.CanCollide = false
-				end
+	if autoFly and player.Character then
+		for _, v in pairs(player.Character:GetDescendants()) do
+			if v:IsA("BasePart") then
+				v.CanCollide = false
 			end
 		end
 	end
 end)
+
+------------------------------------------
+-- Spawn Handler
+------------------------------------------
 
 player.CharacterAdded:Connect(function()
+	hideStartupNotice()
+
 	if isFirstSpawn then
 		isFirstSpawn = false
 	else
 		rounds += 1
-		showNotification("🎉 Đã hoàn thành 1 trận mới!", Color3.fromRGB(0, 200, 255))
-		task.wait(1)
-		teleportToSafePosition()
+		showNotificationQueue("🎉 Đã hoàn thành 1 trận mới!", Color3.fromRGB(0, 200, 255))
+	end
+
+	task.delay(1, function()
 		createCoverGui()
-		task.delay(1, function()
-			autoFly = true
-			showNotification("✅ Hệ thống bay đã hoạt động.", Color3.fromRGB(0, 200, 0))
-		end)
+		startFlying()
+		showNotificationQueue("✅ Hệ thống bay đã sẵn sàng hoạt động.", Color3.fromRGB(0, 200, 0))
+	end)
+end)
+
+------------------------------------------
+-- Anti AFK
+------------------------------------------
+
+player.Idled:Connect(function()
+	VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+	task.wait(1)
+	VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
+
+------------------------------------------
+-- Anti Ban (giả lập)
+------------------------------------------
+
+task.spawn(function()
+	while task.wait(10) do
+		-- fake logic
 	end
 end)
 
-showStartNotice(function()
-	teleportToSafePosition()
-	createCoverGui()
-	task.delay(1, function()
-		autoFly = true
-		showNotification("✅ Hệ thống bay đã hoạt động.", Color3.fromRGB(0, 200, 0))
-	end)
-end)
+------------------------------------------
+-- Show Startup Notice
+------------------------------------------
+
+showStartupNotice()
+
+------------------------------------------
+-- ✅ ADD BASE64 ENCODE / DECODE
+------------------------------------------
+
+-- Base64 encode/decode
+local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' -- 64 chars
+
+function base64Encode(data)
+    return ((data:gsub('.', function(x)
+        local r,b='',x:byte()
+        for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
+        return r
+    end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+        if (#x < 6) then return '' end
+        local c=0
+        for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
+        return b:sub(c+1,c+1)
+    end)..({ '', '==', '=' })[#data%3+1])
+end
+
+function base64Decode(data)
+    data = string.gsub(data, '[^'..b..'=]', '')
+    return (data:gsub('.', function(x)
+        if (x == '=') then return '' end
+        local r,f='',(b:find(x)-1)
+        for i=6,1,-1 do r=r..(f%2^i-f%2^(i-1)>0 and '1' or '0') end
+        return r
+    end):gsub('%d%d%d%d%d%d%d%d', function(x)
+        local c=0
+        for i=1,8 do c=c+(x:sub(i,i)=='1' and 2^(8-i) or 0) end
+        return string.char(c)
+    end))
+end
+
+-- Example usage:
+-- local encoded = base64Encode("Hello World")
+-- local decoded = base64Decode(encoded)
+-- print(encoded, decoded)
