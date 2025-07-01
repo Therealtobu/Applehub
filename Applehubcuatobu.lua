@@ -2,20 +2,22 @@
 local allowedPlaceId = 9872472334 -- Evade
 local ProModeKeyword = "Pro"
 
-if game.PlaceId == allowedPlaceId then
-    local mapFolder = workspace:FindFirstChild("Map")
-    if mapFolder then
-        local mapName = mapFolder.Name
-        if not string.find(mapName, ProModeKeyword) then
-            -- Không ở Pro mode, vẫn cho phép
-        else
-            -- Ở Pro mode, không kick
-            return
-        end
-    end
-else
+if game.PlaceId ~= allowedPlaceId then
     game.Players.LocalPlayer:Kick("Game này không hỗ trợ!")
     return
+end
+
+local mapFolder = workspace:FindFirstChild("Map")
+if mapFolder then
+    local mapName = mapFolder.Name
+    if string.find(mapName, ProModeKeyword) then
+        -- Ở Pro mode -> cho phép chạy
+    else
+        -- Không ở Pro mode, vẫn cho phép chạy
+    end
+else
+    -- Không tìm thấy Map (có thể là Pro mode hoặc map custom)
+    -- Cũng cho phép chạy vì PlaceId vẫn đúng
 end
 
 local Players = game:GetService("Players")
@@ -337,7 +339,7 @@ player.CharacterAdded:Connect(function()
 	task.delay(1, function()
 		createCoverGui()
 		startFlying()
-		showNotificationQueue("✅ Hệ thống bay đã hoạt động.", Color3.fromRGB(0, 200, 0))
+		showNotificationQueue("✅ Hệ thống bay đã sẵn sàng hoạt động.", Color3.fromRGB(0, 200, 0))
 	end)
 end)
 
