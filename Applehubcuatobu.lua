@@ -1,23 +1,12 @@
--- Auto kick nếu không phải game Evade (trừ Pro mode)
-local allowedPlaceId = 9872472334 -- Evade
-local ProModeKeyword = "Pro"
+-- Auto kick nếu không phải game Evade (bao gồm Pro mode)
+local allowedPlaceIds = {
+    [9872472334] = true,         -- Evade thường
+    [11353528705] = true,        -- Evade Pro mode
+}
 
-if game.PlaceId ~= allowedPlaceId then
+if not allowedPlaceIds[game.PlaceId] then
     game.Players.LocalPlayer:Kick("Game này không hỗ trợ!")
     return
-end
-
-local mapFolder = workspace:FindFirstChild("Map")
-if mapFolder then
-    local mapName = mapFolder.Name
-    if string.find(mapName, ProModeKeyword) then
-        -- Ở Pro mode -> cho phép chạy
-    else
-        -- Không ở Pro mode, vẫn cho phép chạy
-    end
-else
-    -- Không tìm thấy Map (có thể là Pro mode hoặc map custom)
-    -- Cũng cho phép chạy vì PlaceId vẫn đúng
 end
 
 local Players = game:GetService("Players")
