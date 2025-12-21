@@ -703,12 +703,12 @@ ToggleButton.MouseLeave:Connect(function()
 end)
 
 -- ============================================
--- MAIN DASHBOARD - Smaller size to fit screen
+-- MAIN DASHBOARD - Rectangular shape
 -- ============================================
 local Dashboard = Instance.new("Frame")
 Dashboard.Name = "Dashboard"
 Dashboard.AnchorPoint = Vector2.new(0.5, 0.5)
-Dashboard.Size = UDim2.new(0, 380, 0, 420)
+Dashboard.Size = UDim2.new(0, 380, 0, 450)
 Dashboard.Position = UDim2.new(0.5, 0, 0.5, 0)
 Dashboard.BackgroundColor3 = CurrentTheme.Background
 Dashboard.BackgroundTransparency = 0.25
@@ -720,7 +720,7 @@ Dashboard.Parent = ScreenGui
 Dashboard.Size = UDim2.new(0, 0, 0, 0)
 
 local DashCorner = Instance.new("UICorner")
-DashCorner.CornerRadius = UDim.new(0, 28)
+DashCorner.CornerRadius = UDim.new(0, 16)
 DashCorner.Parent = Dashboard
 
 -- Backdrop blur layers
@@ -733,7 +733,7 @@ BackdropBlur1.ZIndex = 1
 BackdropBlur1.Parent = Dashboard
 
 local BackdropBlur1Corner = Instance.new("UICorner")
-BackdropBlur1Corner.CornerRadius = UDim.new(0, 28)
+BackdropBlur1Corner.CornerRadius = UDim.new(0, 16)
 BackdropBlur1Corner.Parent = BackdropBlur1
 
 local BackdropBlur2 = Instance.new("Frame")
@@ -745,7 +745,7 @@ BackdropBlur2.ZIndex = 2
 BackdropBlur2.Parent = Dashboard
 
 local BackdropBlur2Corner = Instance.new("UICorner")
-BackdropBlur2Corner.CornerRadius = UDim.new(0, 28)
+BackdropBlur2Corner.CornerRadius = UDim.new(0, 16)
 BackdropBlur2Corner.Parent = BackdropBlur2
 
 -- Gradient overlay
@@ -758,7 +758,7 @@ GradientOverlay.ZIndex = 3
 GradientOverlay.Parent = Dashboard
 
 local GradCorner = Instance.new("UICorner")
-GradCorner.CornerRadius = UDim.new(0, 28)
+GradCorner.CornerRadius = UDim.new(0, 16)
 GradCorner.Parent = GradientOverlay
 
 local Gradient = Instance.new("UIGradient")
@@ -792,11 +792,11 @@ OuterGlow.ZIndex = 0
 OuterGlow.Parent = Dashboard
 
 -- ============================================
--- TOP BAR
+-- TOP BAR - Rectangular
 -- ============================================
 local TopBar = Instance.new("Frame")
 TopBar.Name = "TopBar"
-TopBar.Size = UDim2.new(1, 0, 0, 56)
+TopBar.Size = UDim2.new(1, 0, 0, 50)
 TopBar.BackgroundColor3 = CurrentTheme.TopBar
 TopBar.BackgroundTransparency = 0.1
 TopBar.BorderSizePixel = 0
@@ -804,12 +804,12 @@ TopBar.ZIndex = 5
 TopBar.Parent = Dashboard
 
 local TopCorner = Instance.new("UICorner")
-TopCorner.CornerRadius = UDim.new(0, 28)
+TopCorner.CornerRadius = UDim.new(0, 16)
 TopCorner.Parent = TopBar
 
 local TopFix = Instance.new("Frame")
-TopFix.Size = UDim2.new(1, 0, 0, 28)
-TopFix.Position = UDim2.new(0, 0, 1, -28)
+TopFix.Size = UDim2.new(1, 0, 0, 16)
+TopFix.Position = UDim2.new(0, 0, 1, -16)
 TopFix.BackgroundColor3 = CurrentTheme.TopBar
 TopFix.BackgroundTransparency = 0.1
 TopFix.BorderSizePixel = 0
@@ -818,7 +818,7 @@ TopFix.Parent = TopBar
 
 -- Bottom border
 local TopBorder = Instance.new("Frame")
-TopBorder.Size = UDim2.new(1, 0, 0, 0.5)
+TopBorder.Size = UDim2.new(1, 0, 0, 1)
 TopBorder.Position = UDim2.new(0, 0, 1, 0)
 TopBorder.BackgroundColor3 = CurrentTheme.Border
 TopBorder.BackgroundTransparency = 0.3
@@ -880,8 +880,8 @@ end)
 -- CATEGORY SCROLL
 -- ============================================
 local CategoryScroll = Instance.new("ScrollingFrame")
-CategoryScroll.Size = UDim2.new(1, -24, 1, -68)
-CategoryScroll.Position = UDim2.new(0, 12, 0, 62)
+CategoryScroll.Size = UDim2.new(1, -24, 1, -62)
+CategoryScroll.Position = UDim2.new(0, 12, 0, 56)
 CategoryScroll.BackgroundTransparency = 1
 CategoryScroll.BorderSizePixel = 0
 CategoryScroll.ScrollBarThickness = 3
@@ -900,12 +900,12 @@ ListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
 end)
 
 -- ============================================
--- FEATURE WINDOW (NESTED)
+-- FEATURE WINDOW (NESTED) - Rectangular
 -- ============================================
 local FeatureWindow = Instance.new("Frame")
 FeatureWindow.Name = "FeatureWindow"
-FeatureWindow.Size = UDim2.new(1, -24, 1, -68)
-FeatureWindow.Position = UDim2.new(0, 12, 0, 62)
+FeatureWindow.Size = UDim2.new(1, -24, 1, -62)
+FeatureWindow.Position = UDim2.new(0, 12, 0, 56)
 FeatureWindow.BackgroundColor3 = CurrentTheme.Background
 FeatureWindow.BackgroundTransparency = 0.2
 FeatureWindow.BorderSizePixel = 0
@@ -915,7 +915,7 @@ FeatureWindow.ZIndex = 10
 FeatureWindow.Parent = Dashboard
 
 local WinCorner = Instance.new("UICorner")
-WinCorner.CornerRadius = UDim.new(0, 20)
+WinCorner.CornerRadius = UDim.new(0, 14)
 WinCorner.Parent = FeatureWindow
 
 -- Glass layers
@@ -928,7 +928,7 @@ WinGlass1.ZIndex = 11
 WinGlass1.Parent = FeatureWindow
 
 local WinGlass1Corner = Instance.new("UICorner")
-WinGlass1Corner.CornerRadius = UDim.new(0, 20)
+WinGlass1Corner.CornerRadius = UDim.new(0, 14)
 WinGlass1Corner.Parent = WinGlass1
 
 local WinBorder = Instance.new("UIStroke")
@@ -939,7 +939,7 @@ WinBorder.Parent = FeatureWindow
 
 -- Header
 local WinHeader = Instance.new("Frame")
-WinHeader.Size = UDim2.new(1, 0, 0, 52)
+WinHeader.Size = UDim2.new(1, 0, 0, 46)
 WinHeader.BackgroundColor3 = CurrentTheme.TopBar
 WinHeader.BackgroundTransparency = 0.15
 WinHeader.BorderSizePixel = 0
@@ -947,12 +947,12 @@ WinHeader.ZIndex = 13
 WinHeader.Parent = FeatureWindow
 
 local WinHeaderCorner = Instance.new("UICorner")
-WinHeaderCorner.CornerRadius = UDim.new(0, 20)
+WinHeaderCorner.CornerRadius = UDim.new(0, 14)
 WinHeaderCorner.Parent = WinHeader
 
 local WinHeaderFix = Instance.new("Frame")
-WinHeaderFix.Size = UDim2.new(1, 0, 0, 20)
-WinHeaderFix.Position = UDim2.new(0, 0, 1, -20)
+WinHeaderFix.Size = UDim2.new(1, 0, 0, 14)
+WinHeaderFix.Position = UDim2.new(0, 0, 1, -14)
 WinHeaderFix.BackgroundColor3 = CurrentTheme.TopBar
 WinHeaderFix.BackgroundTransparency = 0.15
 WinHeaderFix.BorderSizePixel = 0
@@ -985,15 +985,15 @@ end)
 
 BackBtn.MouseButton1Click:Connect(function()
     TweenService:Create(FeatureWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Position = UDim2.new(1.2, 0, 0, 62)
+        Position = UDim2.new(1.2, 0, 0, 56)
     }):Play()
     
     task.wait(0.3)
     FeatureWindow.Visible = false
-    FeatureWindow.Position = UDim2.new(0, 12, 0, 62)
+    FeatureWindow.Position = UDim2.new(0, 12, 0, 56)
     
     TweenService:Create(CategoryScroll, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-        Position = UDim2.new(0, 12, 0, 62)
+        Position = UDim2.new(0, 12, 0, 56)
     }):Play()
 end)
 
@@ -1011,8 +1011,8 @@ WinTitle.Parent = WinHeader
 
 -- Feature Scroll
 local FeatureScroll = Instance.new("ScrollingFrame")
-FeatureScroll.Size = UDim2.new(1, -24, 1, -64)
-FeatureScroll.Position = UDim2.new(0, 12, 0, 58)
+FeatureScroll.Size = UDim2.new(1, -24, 1, -58)
+FeatureScroll.Position = UDim2.new(0, 12, 0, 52)
 FeatureScroll.BackgroundTransparency = 1
 FeatureScroll.BorderSizePixel = 0
 FeatureScroll.ScrollBarThickness = 3
@@ -1039,7 +1039,7 @@ local function openUI()
     Dashboard.Size = UDim2.new(0, 0, 0, 0)
     
     TweenService:Create(Dashboard, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 380, 0, 420)
+        Size = UDim2.new(0, 380, 0, 450)
     }):Play()
     
     TweenService:Create(ToggleButton, TweenInfo.new(0.3), {
@@ -1060,7 +1060,7 @@ local function closeUI()
     
     task.wait(0.35)
     Dashboard.Visible = false
-    Dashboard.Size = UDim2.new(0, 380, 0, 420)
+    Dashboard.Size = UDim2.new(0, 380, 0, 450)
 end
 
 ToggleButton.MouseButton1Click:Connect(function()
@@ -1178,15 +1178,15 @@ local function createCategory(config)
 
     Card.MouseButton1Click:Connect(function()
         TweenService:Create(CategoryScroll, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = UDim2.new(-1.2, 0, 0, 62)
+            Position = UDim2.new(-1.2, 0, 0, 56)
         }):Play()
         
         FeatureWindow.Visible = true
-        FeatureWindow.Position = UDim2.new(1.2, 0, 0, 62)
+        FeatureWindow.Position = UDim2.new(1.2, 0, 0, 56)
         WinTitle.Text = config.Name
         
         TweenService:Create(FeatureWindow, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = UDim2.new(0, 12, 0, 62)
+            Position = UDim2.new(0, 12, 0, 56)
         }):Play()
         
         for _, child in pairs(FeatureScroll:GetChildren()) do
@@ -1723,8 +1723,27 @@ createCategory({
         })
         
         -- Initialize with current ores
-        resetRockList()
-        oreDropdown.SetValues(nameOreList)
+        task.spawn(function()
+            resetRockList()
+            task.wait(0.1)
+            if #nameOreList > 0 then
+                oreDropdown.SetValues(nameOreList)
+            end
+        end)
+        
+        createButton(parent, {
+            Name = "🔄 Refresh Ore List",
+            Callback = function()
+                resetRockList()
+                task.wait(0.1)
+                if #nameOreList > 0 then
+                    oreDropdown.SetValues(nameOreList)
+                    print("✅ Ore list refreshed! Found " .. #nameOreList .. " ores")
+                else
+                    print("⚠️ No ores found nearby")
+                end
+            end
+        })
         
         createToggle(parent, {
             Name = "Auto Mine",
@@ -1749,14 +1768,6 @@ createCategory({
             end
         })
         
-        createButton(parent, {
-            Name = "🔄 Refresh Ore List",
-            Callback = function()
-                resetRockList()
-                oreDropdown.SetValues(nameOreList)
-            end
-        })
-        
         createToggle(parent, {
             Name = "Auto Teleport Locations",
             Icon = "🔄",
@@ -1775,6 +1786,7 @@ createCategory({
             Callback = function()
                 addLocation()
                 Library:SaveConfig("TigerHubTF/locationList.json", locationList)
+                print("✅ Location saved!")
             end
         })
         
@@ -1783,6 +1795,7 @@ createCategory({
             Callback = function()
                 table.clear(locationList)
                 Library:SaveConfig("TigerHubTF/locationList.json", locationList)
+                print("✅ All locations cleared!")
             end
         })
     end
@@ -1809,8 +1822,27 @@ createCategory({
         })
         
         -- Initialize with current monsters
-        resetMonsterList()
-        monsterDropdown.SetValues(nameMonsterList)
+        task.spawn(function()
+            resetMonsterList()
+            task.wait(0.1)
+            if #nameMonsterList > 0 then
+                monsterDropdown.SetValues(nameMonsterList)
+            end
+        end)
+        
+        createButton(parent, {
+            Name = "🔄 Refresh Monster List",
+            Callback = function()
+                resetMonsterList()
+                task.wait(0.1)
+                if #nameMonsterList > 0 then
+                    monsterDropdown.SetValues(nameMonsterList)
+                    print("✅ Monster list refreshed! Found " .. #nameMonsterList .. " types")
+                else
+                    print("⚠️ No monsters found nearby")
+                end
+            end
+        })
         
         createToggle(parent, {
             Name = "Auto Kill Monsters",
@@ -1832,14 +1864,6 @@ createCategory({
             Default = false,
             Callback = function(value)
                 isSwing = value
-            end
-        })
-        
-        createButton(parent, {
-            Name = "🔄 Refresh Monster List",
-            Callback = function()
-                resetMonsterList()
-                monsterDropdown.SetValues(nameMonsterList)
             end
         })
     end
@@ -2077,10 +2101,10 @@ openUI()
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 print("✨ TIGER HUB - THE FORGE")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-print("🎨 Theme: iOS 26 Style")
-print("📏 Size: 380x420 (fits mobile)")
+print("🎨 Theme: iOS 26 Rectangular Style")
+print("📏 Size: 380x450 (fits mobile)")
 print("🍎 Toggle: Apple icon button")
-print("📋 Dropdowns: Multi-select for ores/monsters")
+print("📋 Dropdowns: Multi-select with refresh")
 print("✅ UI Loaded Successfully!")
 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
